@@ -1,0 +1,15 @@
+AppBundle\Entity\Room:
+  type: entity
+  table: rooms
+  repositoryClass: AppBundle\Repository\RoomRepository
+  id:
+    id:
+      type: integer
+      generator: { strategy: AUTO }
+  fields:
+    name:
+      type: string
+      length: 16
+    key:
+      type: string
+      length: 8

@@ -1,0 +1,26 @@
+AppBundle\Entity\CalendarPriceRoom:
+  type: entity
+  table: calendar_price_rooms
+  repositoryClass: AppBundle\Repository\CalendarPriceRoomRepository
+  id:
+    id:
+      type: integer
+      generator: { strategy: AUTO }
+  fields:
+    startAt:
+      type: date
+    endAt:
+      type: date
+    rule:
+      type: string
+    price:
+      type: decimal
+    createdAt:
+      type: datetime
+  manyToOne:
+    room:
+      targetEntity: Room
+      inversedBy: rooms
+      joinColumn:
+        name: room_id
+        referenceColumnName: id

@@ -1,0 +1,14 @@
+app.default.get:
+  path: /calendars
+  defaults: { _controller: AppBundle:Calendar:get, _format: json}
+  methods: [GET]
+
+app.default.price_post:
+  path: /calendars/price
+  defaults: { _controller: AppBundle:Calendar:postCalendarPrice, _format: json}
+  methods: [POST]
+
+app.default.inventory_post:
+  path: /calendars/inventory
+  defaults: { _controller: AppBundle:Calendar:postCalendarInventory, _format: json}
+  methods: [POST]

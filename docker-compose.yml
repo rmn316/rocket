@@ -1,0 +1,35 @@
+version: '2'
+
+services:
+  projects:
+    image: busybox:latest
+    volumes:
+      - ./frontends:/var/www/live/frontends/
+  httpd-php55:
+    build:
+      context: .
+      args:
+        - HTTP_PROXY
+        - HTTPS_PROXY
+        - INSTALL_COMPOSER=true
+        - INSTALL_XDEBUG=true
+        - INSTALL_OPCACHE=true
+        - INSTALL_NODE=true
+        - NODE_VERSION=4.6.1
+    ports:
+      - "8080:80"
+      - "443:443"
+      - "9000"
+    volumes_from:
+      - projects
+  mysql:
+    image: mysql:5.5
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootPassword
+      MYSQL_USER: sqluser
+      MYSQL_PASSWORD: sqluser
+    volumes:
+      - ./docker/mysql/data:/docker-entrypoint-initdb.d
+

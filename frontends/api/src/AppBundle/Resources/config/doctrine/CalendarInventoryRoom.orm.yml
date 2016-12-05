@@ -1,0 +1,26 @@
+AppBundle\Entity\CalendarInventoryRoom:
+  type: entity
+  table: calendar_inventory_rooms
+  repositoryClass: AppBundle\Repository\CalendarInventoryRoomRepository
+  id:
+    id:
+      type: integer
+      generator: { strategy: AUTO }
+  fields:
+    startAt:
+      type: date
+    endAt:
+      type: date
+    rule:
+      type: string
+    inventory:
+      type: integer
+    createdAt:
+      type: datetime
+  manyToOne:
+    room:
+      targetEntity: Room
+      inversedBy: rooms
+      joinColumn:
+        name: room_id
+        referenceColumnName: id

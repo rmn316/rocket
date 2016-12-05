@@ -1,0 +1,10 @@
+#!/bin/bash
+
+if [ ! -f /etc/httpd/https.key ]; then
+	openssl genrsa -out /etc/httpd/https.key 2048
+fi
+
+if [ ! -f /etc/httpd/https.crt ]; then
+	openssl req -key /etc/httpd/https.key -new -x509 -days 36500 -out /etc/httpd/https.crt -subj "/C=UK/ST=Leicestershire/L=Leicester/O=Robert Neal/CN=localhost"
+fi 
+

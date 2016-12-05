@@ -1,0 +1,192 @@
+<div class="container">
+    <section class="well well-sm">
+        <form name="bulk" role="form" class="form-horizontal" novalidate ng-submit="main.updateItemBulk()">
+            <div class="row">
+                <fieldset class="col-sm-12">
+                    <legend>Select Room</legend>
+                    <div class="col-sm-6">
+                        <div class="col-sm-offset-4 col-sm-8">
+                            <div class="form-group">
+                                <select id="room" name="room" class="form-control" ng-model="main.bulk.room">
+                                    <option></option>
+                                    <option value="single">Single Room</option>
+                                    <option value="double">Double Room</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+            <div class="row">
+                <fieldset class="col-sm-6">
+                    <legend>Select Dates</legend>
+                    <div class="form-group">
+                        <label for="dateFrom" class="col-sm-4 control-label">From:</label>
+                        <div class="col-sm-8">
+                            <input
+                                    id="dateFrom"
+                                    name="date[from]"
+                                    type="text"
+                                    class="form-control"
+                                    ng-model="main.bulk.date.start"
+                                    placeholder="YYYY-MM-DD"
+                                    required
+                            />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="dateTo" class="col-sm-4 control-label">To:</label>
+                        <div class="col-sm-8">
+                            <input
+                                    id="dateTo"
+                                    name="date[to]"
+                                    type="text"
+                                    class="form-control"
+                                    ng-model="main.bulk.date.end"
+                                    placeholder="YYYY-MM-DD"
+                                    required
+                            />
+                        </div>
+                    </div>
+                </fieldset>
+                <fieldset class="col-sm-6">
+                    <legend>Refine Days</legend>
+                    <div class="col-sm-3">
+                        <div>
+                            <label class="checkbox"><input type="checkbox" ng-model="main.bulk.days.all"> All Days</label>
+                        </div>
+                        <div>
+                            <label class="checkbox"><input type="checkbox" ng-model="main.bulk.days.weekday"> All Weekdays</label>
+                        </div>
+                        <div>
+                            <label class="checkbox"><input type="checkbox" ng-model="main.bulk.days.weekend"> All Weekends</label>
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div>
+                            <label class="checkbox"><input type="checkbox" ng-model="main.bulk.days.MO"> Mondays</label>
+                        </div>
+                        <div>
+                            <label class="checkbox"><input type="checkbox" ng-model="main.bulk.days.TU"> Tuesdays</label>
+                        </div>
+                        <div>
+                            <label class="checkbox"><input type="checkbox" ng-model="main.bulk.days.WE"> Wednesdays</label>
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div>
+                            <label class="checkbox"><input type="checkbox" ng-model="main.bulk.days.TH"> Thursdays</label>
+                        </div>
+                        <div>
+                            <label class="checkbox"><input type="checkbox" ng-model="main.bulk.days.FR"> Fridays</label>
+                        </div>
+                        <div>
+                            <label class="checkbox"><input type="checkbox" ng-model="main.bulk.days.SA"> Saturdays</label>
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div>
+                            <label class="checkbox"><input type="checkbox" ng-model="main.bulk.days.SU"> Sundays</label>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+            <div class="row">
+                <fieldset class="col-sm-6">
+                    <legend>Price</legend>
+                    <div class="form-group">
+                        <label for="price" class="col-sm-4 control-label">Change Price To:</label>
+                        <div class="col-sm-8">
+                            <input id="price" name="price" type="number" class="form-control" ng-model="main.bulk.price" required />
+                        </div>
+                    </div>
+                </fieldset>
+                <fieldset class="col-sm-6">
+                    <legend>Availability</legend>
+                    <div class="form-group">
+                        <label for="inventory" class="col-sm-4 control-label">Change Availability To:</label>
+                        <div class="col-sm-8">
+                            <input id="inventory" name="inventory" type="number" class="form-control" ng-model="main.bulk.inventory" required />
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+            <fieldset>
+                <div class="col-sm-6">
+                    <div class="form-group pull-right">
+                        <button type="reset" class="btn btn-default">Clear</button>
+                        <button type="submit" class="btn btn-primary">Update</button>
+                    </div>
+                </div>
+            </fieldset>
+        </form>
+    </section>
+    <table class="table table-condensed table-bordered" ng-if="main.calendarDays.length > 0">
+        <thead>
+            <tr>
+                <th rowspan="3" class="active center">Price and Availability</th>
+                <th colspan="14" class="active center">
+                    <span uib-dropdown>
+                        <a uib-dropdown-toggle><i class="glyphicon glyphicon-chevron-down"></i></a>
+                        <ul uib-dropdown-menu class="col-sm-12">
+                            <li ng-repeat="item in months">
+                                <a ng-click="main.getEventsForMonth(item)">{{ item|date:"MMMM', 'yyyy" }}</a>
+                            </li>
+                        </ul>
+                    </span>
+                    {{ main.currentDate|date:"MMMM" }}
+                    <a ng-click="main.getNextMonth(main.currentDate)"><i class="glyphicon glyphicon-chevron-right"></i></a>
+                </th>
+            </tr>
+            <tr>
+                <th class="warning center" ng-repeat="day in main.calendarDays"><strong>{{ day|date:'EEEE' }}</strong></th>
+            </tr>
+            <tr>
+                <th class="active center" ng-repeat="day in main.calendarDays">
+                    {{ day|date:'d' }}
+                    <a ng-if="$last" ng-click="main.getEventsFrom(day)"><i class="glyphicon glyphicon-chevron-right"></i></a>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td colspan="15" class="warning">Single Room</td>
+        </tr>
+        <tr>
+            <td class="active">Rooms Available</td>
+            <td class="active center" ng-repeat="event in main.inventory.single">
+                <div class="popover-wrapper">
+                    <a href="#" editable-text="event.available" onaftersave="main.updateInventory(event)">{{ event.available || "empty" }}</a>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="active">Price</td>
+            <td class="center" ng-repeat="event in main.inventory.single">
+                <div class="popover-wrapper">
+                    <a href="#" editable-text="event.price" onaftersave="main.updatePrice(event)">{{ event.price|number:0 }} IDR</a>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="15" class="info">Double Room</td>
+        </tr>
+        <tr>
+            <td class="active">Rooms Available</td>
+            <td class="center active" ng-repeat="event in main.inventory.double">
+                <div class="popover-wrapper">
+                    <a href="#" editable-text="event.available" onaftersave="main.updateInventory(event)">{{ event.available || "empty" }}</a>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="active">Price</td>
+            <td class="center" ng-repeat="event in main.inventory.double">
+                <div class="popover-wrapper">
+                    <a href="#" editable-text="event.price" onaftersave="main.updatePrice(event)">{{ event.price|number:0 }} IDR</a>
+                </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
