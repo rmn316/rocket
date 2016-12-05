@@ -19,8 +19,8 @@ CREATE TABLE calendar_price_rooms (
   created_at DATETIME NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8;
 
-INSERT INTO calendar_inventory_rooms(room_id, start_at, end_at, rule, inventory, created_at) VALUES (1, '2016-01-01', '2017-01-01', 'FREQ=DAILY', 5, now());
-INSERT INTO calendar_inventory_rooms(room_id, start_at, end_at, rule, inventory, created_at) VALUES (2, '2016-01-01', '2017-01-01', 'FREQ=DAILY', 5, now());
+INSERT INTO calendar_price_rooms(room_id, start_at, end_at, rule, price, created_at) VALUES (1, '2016-01-01', '2017-01-01', 'FREQ=DAILY', 15, now());
+INSERT INTO calendar_price_rooms(room_id, start_at, end_at, rule, price, created_at) VALUES (2, '2016-01-01', '2017-01-01', 'FREQ=DAILY', 15, now());
 
 CREATE TABLE calendar_inventory_rooms (
   id INTEGER NOT NULL PRIMARY KEY auto_increment,
@@ -32,8 +32,8 @@ CREATE TABLE calendar_inventory_rooms (
   created_at DATETIME NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8;
 
-INSERT INTO calendar_price_rooms(room_id, start_at, end_at, rule, price, created_at) VALUES (1, '2016-01-01', '2017-01-01', 'FREQ=DAILY', 15, now());
-INSERT INTO calendar_price_rooms(room_id, start_at, end_at, rule, price, created_at) VALUES (2, '2016-01-01', '2017-01-01', 'FREQ=DAILY', 15, now());
+INSERT INTO calendar_inventory_rooms(room_id, start_at, end_at, rule, inventory, created_at) VALUES (1, '2016-01-01', '2017-01-01', 'FREQ=DAILY', 5, now());
+INSERT INTO calendar_inventory_rooms(room_id, start_at, end_at, rule, inventory, created_at) VALUES (2, '2016-01-01', '2017-01-01', 'FREQ=DAILY', 5, now());
 
 GRANT ALL ON rocket.* TO 'sqluser'@'%';
 FLUSH PRIVILEGES;
