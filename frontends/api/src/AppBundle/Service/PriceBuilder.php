@@ -13,12 +13,10 @@ use Recurr\Rule;
 use Recurr\Transformer\ArrayTransformer;
 use Recurr\Transformer\ArrayTransformerConfig;
 
-class PriceBuilder
+class PriceBuilder extends Builder
 {
     /** @var CalendarPriceRoomRepository */
     private $calendarPriceRoomRepository;
-    /** @var array */
-    private $output = [];
 
     public function __construct(CalendarPriceRoomRepository $calendarPriceRoomRepository)
     {
@@ -38,22 +36,16 @@ class PriceBuilder
         }
     }
 
-    public function build(DateTime $startDate, DateTime $endDate, $roomType)
+    public function build(DateTime $startDate, DateTime $endDate, $roomType = null)
     {
         if (empty($this->output)) {
             throw new Exception('Not Initialised');
         }
 
         $calendarPriceRooms = $this->calendarPriceRoomRepository->findByStartAndEndDate($startDate, $endDate);
-
-        $transformer = new ArrayTransformer();
-        $transformerConfig = new ArrayTransformerConfig();
-        $transformerConfig->enableLastDayOfMonthFix();
-        $transformer->setConfig($transformerConfig);
-
         foreach ($calendarPriceRooms as $calendarRoom) {
             $rule = new Rule($calendarRoom->getRule(), $calendarRoom->getStartAt(), $calendarRoom->getEndAt());
-            $this->generate($startDate, $endDate, $calendarRoom, $transformer->transform($rule));
+            $this->generate($startDate, $endDate, $calendarRoom, $this->getTransformer()->transform($rule));
         }
 
         return $this->output;
@@ -70,6 +62,10 @@ class PriceBuilder
     {
         $roomKey = $calendarRoom->getRoom()->getKey();
 
+        $rule = new Rule($calendarRoom->getRule());
+        $rule->setWeekStart('SU');
+        $daysOnly = $rule->getByDay();
+
         /** @var Recurrence[] $arrayOfDates */
         $arrayOfDates = $dates->toArray();
 
@@ -78,16 +74,7 @@ class PriceBuilder
         foreach ($period as $day) {
             $formattedDate = $day->format('Y-m-d');
 
-            $isValid = false;
-            foreach ($arrayOfDates as $value) {
-                if ($value->getStart() <= $day && $value->getEnd() >= $day) {
-                    // valid
-                    $isValid = true;
-                    break;
-                }
-            }
-
-            if ($isValid) {
+            if ($this->isValid($day, $arrayOfDates, $daysOnly)) {
                 if (array_key_exists($formattedDate, $this->output[$calendarRoom->getRoom()->getKey()])) {
                     // date is set check if new add apply.
                     if ($this->output[$roomKey][$formattedDate]['created'] < $calendarRoom->getCreatedAt()) {

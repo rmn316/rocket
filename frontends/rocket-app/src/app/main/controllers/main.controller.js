@@ -70,14 +70,16 @@ export class MainController {
     }
 
     updateInventory (event) {
+        this.log.info(event);
         var data = {
-            inventory: event.inventory,
+            inventory: event.available,
             date: {
                 start: event.date.date,
                 end: event.date.date
             },
             room: event.room.key
         };
+        this.log.info(data);
 
         this.http.post('/api/calendars/inventory', data).then(function (response) {
             this.log.info(response);
@@ -91,6 +93,7 @@ export class MainController {
         this.log.info(data);
 
         if (angular.isDefined(data.inventory)) {
+            this.log.info('START');
             this.http.post('/api/calendars/inventory', data).then(function (response) {
                 this.log.info(response);
                 this.getEvents(

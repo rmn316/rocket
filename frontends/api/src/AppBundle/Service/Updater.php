@@ -94,13 +94,13 @@ abstract class Updater
     {
         $restriction = [];
         foreach ($days as $key => $value) {
-            switch ($value) {
+            switch (strtoupper($value)) {
                 case 'WEEKEND':
                     $restriction = ['SA', 'SU'];
                     unset($days[$key]);
                     break;
                 case 'WEEKDAY':
-                    $restriction = ['MO,TU,WE,TH,FR'];
+                    $restriction = ['MO','TU','WE','TH','FR'];
                     unset($days[$key]);
                     break;
                 case 'ALL':
@@ -108,6 +108,6 @@ abstract class Updater
                     break;
             }
         }
-        return array_merge($days, $restriction);
+        return array_replace($days, $restriction);
     }
 }

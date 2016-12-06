@@ -156,7 +156,7 @@
             <td class="active">Rooms Available</td>
             <td class="active center" ng-repeat="event in main.inventory.single">
                 <div class="popover-wrapper">
-                    <a href="#" editable-text="event.available" onaftersave="main.updateInventory(event)">{{ event.available || "empty" }}</a>
+                    <a href="#" editable-text="event.available" onaftersave="main.updateInventory(event)">{{ event.available || "FULL" }}</a>
                 </div>
             </td>
         </tr>
@@ -175,7 +175,7 @@
             <td class="active">Rooms Available</td>
             <td class="center active" ng-repeat="event in main.inventory.double">
                 <div class="popover-wrapper">
-                    <a href="#" editable-text="event.available" onaftersave="main.updateInventory(event)">{{ event.available || "empty" }}</a>
+                    <a href="#" editable-text="event.available" onaftersave="main.updateInventory(event)">{{ event.available || "FULL" }}</a>
                 </div>
             </td>
         </tr>

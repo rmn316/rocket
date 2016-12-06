@@ -3,6 +3,7 @@
 namespace AppBundle\Service;
 
 use AppBundle\Entity\CalendarInventoryRoom;
+use AppBundle\Entity\CalendarPriceRoom;
 use AppBundle\Entity\Room;
 use AppBundle\Repository\CalendarInventoryRoomRepository;
 use AppBundle\Repository\CalendarPriceRoomRepository;
@@ -15,28 +16,13 @@ use Recurr\Rule;
 use Recurr\Transformer\ArrayTransformer;
 use Recurr\Transformer\ArrayTransformerConfig;
 
-class InventoryBuilder
+class InventoryBuilder extends Builder
 {
     /** @var CalendarInventoryRoomRepository */
     private $calendarInventoryRoomRepository;
-    /** @var array */
-    private $output = [];
 
     public function __construct(CalendarInventoryRoomRepository $calendarInventoryRoomRepository) {
         $this->calendarInventoryRoomRepository = $calendarInventoryRoomRepository;
-    }
-
-    /**
-     * @param Room[] $rooms
-     * @param null $roomType
-     */
-    public function buildEmptyResultSet(array $rooms, $roomType = null)
-    {
-        foreach ($rooms as $room) {
-            if ($roomType === null || $roomType === $room->getKey()) {
-                $this->output[$room->getKey()] = [];
-            }
-        }
     }
 
     /**
@@ -52,17 +38,11 @@ class InventoryBuilder
             throw new Exception('Not Initialised');
         }
 
-        // get all rules.
+        /** @var CalendarInventoryRoom[] $calendarInventoryRooms */
         $calendarInventoryRooms = $this->calendarInventoryRoomRepository->findByStartAndEndDate($startDate, $endDate);
-
-        $transformer = new ArrayTransformer();
-        $transformerConfig = new ArrayTransformerConfig();
-        $transformerConfig->enableLastDayOfMonthFix();
-        $transformer->setConfig($transformerConfig);
-
         foreach ($calendarInventoryRooms as $calendarRoom) {
             $rule = new Rule($calendarRoom->getRule(), $calendarRoom->getStartAt(), $calendarRoom->getEndAt());
-            $this->generate($startDate, $endDate, $calendarRoom, $transformer->transform($rule));
+            $this->generate($startDate, $endDate, $calendarRoom, $this->getTransformer()->transform($rule));
         }
 
         return $this->output;
@@ -79,6 +59,9 @@ class InventoryBuilder
     {
         $roomKey = $calendarRoom->getRoom()->getKey();
 
+        $rule = new Rule($calendarRoom->getRule());
+        $daysOnly = $rule->getByDay();
+
         /** @var Recurrence[] $arrayOfDates */
         $arrayOfDates = $dates->toArray();
 
@@ -87,16 +70,7 @@ class InventoryBuilder
         foreach ($period as $day) {
             $formattedDate = $day->format('Y-m-d');
 
-            $isValid = false;
-            foreach ($arrayOfDates as $value) {
-                if ($value->getStart() <= $day && $value->getEnd() >= $day) {
-                    // valid
-                    $isValid = true;
-                    break;
-                }
-            }
-
-            if ($isValid) {
+            if ($this->isValid($day, $arrayOfDates, $daysOnly)) {
                 if (array_key_exists($formattedDate, $this->output[$calendarRoom->getRoom()->getKey()])) {
                     // date is set check if new add apply.
                     if ($this->output[$roomKey][$formattedDate]['created'] < $calendarRoom->getCreatedAt()) {
