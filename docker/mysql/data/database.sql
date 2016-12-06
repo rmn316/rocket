@@ -1,5 +1,6 @@
 CREATE DATABASE rocket;
 
+USE rocket;
 CREATE TABLE rooms (
   id INTEGER NOT NULL PRIMARY KEY auto_increment,
   `name` VARCHAR(16) NOT NULL,
