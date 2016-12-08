@@ -40,17 +40,15 @@ class CalendarController extends Controller
         /** @var PriceUpdater $service */
         $service = $this->get('app.service.price_updater');
 
-        $parameters = json_decode($request->getContent(), true);
+        $request->request->replace(json_decode($request->getContent(), true));
 
         try {
             $result = $service->update(
-                new DateTime($parameters['date']['start']),
-                new DateTime($parameters['date']['end']),
-                $parameters['price'],
-                [
-                    'days' => isset($parameters['days']) ? array_keys($parameters['days']) : [],
-                    'room' => $parameters['room']
-                ]
+                new DateTime($request->request->get('start_date')),
+                new DateTime($request->request->get('end_date')),
+                $request->request->get('price'),
+                $request->request->get('room'),
+                is_array($request->request->get('days')) ? $request->request->get('days') : []
             );
         } catch (Exception $e) {
             throw $e;
@@ -68,17 +66,15 @@ class CalendarController extends Controller
         /** @var InventoryUpdater $service */
         $service = $this->get('app.service.inventory_updater');
 
-        $parameters = json_decode($request->getContent(), true);
+        $request->request->replace(json_decode($request->getContent(), true));
 
         try {
             $result = $service->update(
-                new DateTime($parameters['date']['start']),
-                new DateTime($parameters['date']['end']),
-                $parameters['inventory'],
-                [
-                    'days' => isset($parameters['days']) ? array_keys($parameters['days']) : [],
-                    'room' => $parameters['room']
-                ]
+                new DateTime($request->request->get('start_date')),
+                new DateTime($request->request->get('end_date')),
+                $request->request->get('inventory'),
+                $request->request->get('room'),
+                is_array($request->request->get('days')) ? $request->request->get('days') : []
             );
         } catch (Exception $e) {
             throw $e;

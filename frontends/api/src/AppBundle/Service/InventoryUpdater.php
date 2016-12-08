@@ -15,14 +15,15 @@ class InventoryUpdater extends Updater
      * @param DateTime $startDate
      * @param DateTime $endDate
      * @param $inventory
-     * @param array $parameters
+     * @param $roomType
+     * @param array $days
      * @return bool
      */
-    public function update(DateTime $startDate, DateTime $endDate, $inventory, array $parameters = [])
+    public function update(DateTime $startDate, DateTime $endDate, $inventory, $roomType, array $days = [])
     {
-        $rule = $this->buildRule($startDate, $endDate, $parameters);
+        $rule = $this->buildRule($startDate, $endDate, $days);
 
-        $rooms = $this->getRooms($parameters['room']);
+        $rooms = $this->getRooms($roomType);
         foreach ($rooms as $room) {
             $this->getEntityForPersist($startDate, $endDate, $rule, $room, $inventory);
         }

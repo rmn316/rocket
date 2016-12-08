@@ -60,6 +60,9 @@ class PriceBuilder extends Builder
      */
     private function generate(DateTime $startDate, DateTime $endDate, CalendarPriceRoom $calendarRoom, RecurrenceCollection $dates)
     {
+        $modifiedEndDate = clone $endDate;
+        $modifiedEndDate->modify('+1 DAY');
+
         $roomKey = $calendarRoom->getRoom()->getKey();
 
         $rule = new Rule($calendarRoom->getRule());
@@ -70,7 +73,7 @@ class PriceBuilder extends Builder
         $arrayOfDates = $dates->toArray();
 
         /** @var DateTime[] $period */
-        $period = new \DatePeriod($startDate, new \DateInterval('P1D'), $endDate);
+        $period = new \DatePeriod($startDate, new \DateInterval('P1D'), $modifiedEndDate);
         foreach ($period as $day) {
             $formattedDate = $day->format('Y-m-d');
 

@@ -3,10 +3,12 @@
 namespace AppBundle\Service;
 
 use AppBundle\Entity\Room;
+use AppBundle\Exception\BadRequestException;
 use AppBundle\Repository\RoomRepository;
 use DateTime;
 use Doctrine\ORM\EntityManager;
 use Recurr\Rule;
+use Symfony\Component\Form\Form;
 
 abstract class Updater
 {
@@ -28,10 +30,11 @@ abstract class Updater
      * @param DateTime $startDate
      * @param DateTime $endDate
      * @param mixed $value
-     * @param array $parameters
+     * @param string $room
+     * @param array $days
      * @return bool
      */
-    abstract public function update(DateTime $startDate, DateTime $endDate, $value, array $parameters = []);
+    abstract public function update(DateTime $startDate, DateTime $endDate, $value, $room, array $days = []);
 
     /**
      * @param DateTime $startDate
@@ -50,12 +53,23 @@ abstract class Updater
     );
 
     /**
+     * @param Form $form
+     * @throws BadRequestException
+     */
+    protected function validateForm(Form $form)
+    {
+        if (!$form->isValid()) {
+            throw new BadRequestException($form->getErrors());
+        }
+    }
+
+    /**
      * @param DateTime $startDate
      * @param DateTime $endDate
-     * @param array $parameters
+     * @param array $days
      * @return Rule
      */
-    protected function buildRule(DateTime $startDate, DateTime $endDate, array $parameters = [])
+    protected function buildRule(DateTime $startDate, DateTime $endDate, array $days = [])
     {
         $rule = (new Rule)
             ->setStartDate($startDate)
@@ -63,8 +77,8 @@ abstract class Updater
             ->setFreq(self::FREQUENCY)
             ->setUntil($endDate);
 
-        if ($parameters['days']) {
-            $rule->setByDay($this->processDaysRestriction($parameters['days']));
+        if (count($days) > 0) {
+            $rule->setByDay($this->processDaysRestriction($days));
         }
 
         return $rule;

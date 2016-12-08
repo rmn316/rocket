@@ -3,13 +3,16 @@
 namespace AppBundle\Service;
 
 use AppBundle\Entity\Room;
+use AppBundle\Exception\BadRequestException;
 use DateTime;
 use Recurr\Transformer\ArrayTransformer;
 use Recurr\Transformer\ArrayTransformerConfig;
+use Symfony\Component\Form\Form;
 
 abstract class Builder
 {
     protected $output = [];
+
     /**
      * @param Room[] $rooms
      * @param null $roomType

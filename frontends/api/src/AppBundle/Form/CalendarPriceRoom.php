@@ -4,6 +4,7 @@ namespace AppBundle\Form;
 
 use AppBundle\Entity\CalendarPriceRoom;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -33,6 +34,21 @@ class CalendarPriceRoomType extends AbstractType
             NumberType::class,
             [
                 'required' => true
+            ]
+        )->add(
+            'days',
+            ChoiceType::class,
+            [
+                'choices' => [
+                    'MO' => 'Mondays',
+                    'TU' => 'Tuesdays',
+                    'WE' => 'Wednesdays',
+                    'TH' => 'Thursdays',
+                    'FR' => 'Fridays',
+                    'SA' => 'Saturdays',
+                    'SU' => 'Sundays'
+                ],
+                'mapped' => false
             ]
         );
     }

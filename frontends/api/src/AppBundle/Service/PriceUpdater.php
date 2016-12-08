@@ -4,23 +4,27 @@ namespace AppBundle\Service;
 
 use AppBundle\Entity\CalendarPriceRoom;
 use AppBundle\Entity\Room;
+use AppBundle\Exception\BadRequestException;
 use DateTime;
 use Recurr\Rule;
+use Symfony\Component\Form\Form;
+use Symfony\Component\HttpFoundation\Request;
 
 class PriceUpdater extends Updater
 {
     /**
      * @param DateTime $startDate
      * @param DateTime $endDate
-     * @param $price
-     * @param array $parameters
+     * @param string $price
+     * @param string $roomType
+     * @param array $days
      * @return bool
      */
-    public function update(DateTime $startDate, DateTime $endDate, $price, array $parameters = [])
+    public function update(DateTime $startDate, DateTime $endDate, $price, $roomType, array $days = [])
     {
-        $rule = $this->buildRule($startDate, $endDate, $parameters);
+        $rule = $this->buildRule($startDate, $endDate, $days);
 
-        $rooms = $this->getRooms($parameters['room']);
+        $rooms = $this->getRooms($roomType);
         foreach ($rooms as $room) {
             $this->getEntityForPersist($startDate, $endDate, $rule, $room, $price);
         }

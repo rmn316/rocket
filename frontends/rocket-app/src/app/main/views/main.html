@@ -6,12 +6,13 @@
                     <legend>Select Room</legend>
                     <div class="col-sm-6">
                         <div class="col-sm-offset-4 col-sm-8">
-                            <div class="form-group">
-                                <select id="room" name="room" class="form-control" ng-model="main.bulk.room">
+                            <div class="form-group" show-errors>
+                                <select id="room" name="room" class="form-control" ng-model="main.bulk.room" ng-required>
                                     <option></option>
                                     <option value="single">Single Room</option>
                                     <option value="double">Double Room</option>
                                 </select>
+                                <div ng-show="bulk.room.$invalid" class="help-block">Please select a room</div>
                             </div>
                         </div>
                     </div>
@@ -20,32 +21,50 @@
             <div class="row">
                 <fieldset class="col-sm-6">
                     <legend>Select Dates</legend>
-                    <div class="form-group">
+                    <div class="form-group" show-errors>
                         <label for="dateFrom" class="col-sm-4 control-label">From:</label>
                         <div class="col-sm-8">
-                            <input
-                                    id="dateFrom"
-                                    name="date[from]"
-                                    type="text"
-                                    class="form-control"
-                                    ng-model="main.bulk.date.start"
-                                    placeholder="YYYY-MM-DD"
-                                    required
-                            />
+                            <div class="input-group">
+                                <input
+                                        id="dateFrom"
+                                        name="start_date"
+                                        type="text"
+                                        class="form-control"
+                                        ng-model="main.bulk.start_date"
+                                        ng-click="main.openBeginDatePicker()"
+                                        datepicker-options="datePickerOptions"
+                                        is-open="beginDatePickerOpen"
+                                        uib-datepicker-popup
+                                        ng-required
+                                />
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-default" ng-click="main.openBeginDatePicker()"><i class="glyphicon glyphicon-calendar"></i></button>
+                                </span>
+                            </div>
+                            <div ng-show="bulk.end_date.$invalid" class="help-block">Date entered is not valid</div>
                         </div>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" show-errors>
                         <label for="dateTo" class="col-sm-4 control-label">To:</label>
                         <div class="col-sm-8">
-                            <input
-                                    id="dateTo"
-                                    name="date[to]"
-                                    type="text"
-                                    class="form-control"
-                                    ng-model="main.bulk.date.end"
-                                    placeholder="YYYY-MM-DD"
-                                    required
-                            />
+                            <div class="input-group">
+                                <input
+                                        id="dateTo"
+                                        name="end_date"
+                                        type="text"
+                                        class="form-control"
+                                        ng-model="main.bulk.end_date"
+                                        ng-click="main.openEndDatePicker()"
+                                        is-open="endDatePickerOpen"
+                                        uib-datepicker-popup
+                                        datepicker-options="datePickerOptions"
+                                        ng-required
+                                />
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-default" ng-click="main.openEndDatePicker()"><i class="glyphicon glyphicon-calendar"></i></button>
+                                </span>
+                            </div>
+                            <div ng-show="bulk.end_date.$invalid" class="help-block">Date entered is not valid</div>
                         </div>
                     </div>
                 </fieldset>
@@ -94,19 +113,21 @@
             <div class="row">
                 <fieldset class="col-sm-6">
                     <legend>Price</legend>
-                    <div class="form-group">
+                    <div class="form-group" show-errors>
                         <label for="price" class="col-sm-4 control-label">Change Price To:</label>
                         <div class="col-sm-8">
-                            <input id="price" name="price" type="number" class="form-control" ng-model="main.bulk.price" required />
+                            <input id="price" name="price" type="number" class="form-control" ng-model="main.bulk.price" />
+                            <div ng-show="bulk.price.$invalid" class="help-block">Please enter a valid value for the price of rooms nightly</div>
                         </div>
                     </div>
                 </fieldset>
                 <fieldset class="col-sm-6">
                     <legend>Availability</legend>
-                    <div class="form-group">
+                    <div class="form-group" show-errors>
                         <label for="inventory" class="col-sm-4 control-label">Change Availability To:</label>
                         <div class="col-sm-8">
-                            <input id="inventory" name="inventory" type="number" class="form-control" ng-model="main.bulk.inventory" required />
+                            <input id="inventory" name="inventory" type="number" class="form-control" ng-model="main.bulk.inventory" />
+                            <div ng-show="bulk.inventory.$invalid" class="help-block">Please enter a valid number for the number of rooms available</div>
                         </div>
                     </div>
                 </fieldset>
@@ -125,7 +146,7 @@
         <thead>
             <tr>
                 <th rowspan="3" class="active center">Price and Availability</th>
-                <th colspan="14" class="active center">
+                <th colspan="{{ daysDisplayed }}" class="active center">
                     <span uib-dropdown>
                         <a uib-dropdown-toggle><i class="glyphicon glyphicon-chevron-down"></i></a>
                         <ul uib-dropdown-menu class="col-sm-12">
@@ -144,19 +165,19 @@
             <tr>
                 <th class="active center" ng-repeat="day in main.calendarDays">
                     {{ day|date:'d' }}
-                    <a ng-if="$last" ng-click="main.getEventsFrom(day)"><i class="glyphicon glyphicon-chevron-right"></i></a>
+                    <a ng-if="$last" ng-click="main.getMoreEvents(day)"><i class="glyphicon glyphicon-chevron-right"></i></a>
                 </th>
             </tr>
         </thead>
         <tbody>
         <tr>
-            <td colspan="15" class="warning">Single Room</td>
+            <td colspan="{{ daysDisplayed + 1 }}" class="warning">Single Room</td>
         </tr>
         <tr>
             <td class="active">Rooms Available</td>
             <td class="active center" ng-repeat="event in main.inventory.single">
                 <div class="popover-wrapper">
-                    <a href="#" editable-text="event.available" onaftersave="main.updateInventory(event)">{{ event.available || "FULL" }}</a>
+                    <a href="#" editable-text="event.available" e-required onbeforesave="main.validInventory($data)" onaftersave="main.updateInventory(event)">{{ event.available || "FULL" }}</a>
                 </div>
             </td>
         </tr>
@@ -164,18 +185,18 @@
             <td class="active">Price</td>
             <td class="center" ng-repeat="event in main.inventory.single">
                 <div class="popover-wrapper">
-                    <a href="#" editable-text="event.price" onaftersave="main.updatePrice(event)">{{ event.price|number:0 }} IDR</a>
+                    <a href="#" editable-text="event.price" e-required onbeforesave="main.validPrice($data)" onaftersave="main.updatePrice(event)">{{ event.price|number:0 }} IDR</a>
                 </div>
             </td>
         </tr>
         <tr>
-            <td colspan="15" class="info">Double Room</td>
+            <td colspan="{{ daysDisplayed + 1 }}" class="info">Double Room</td>
         </tr>
         <tr>
             <td class="active">Rooms Available</td>
             <td class="center active" ng-repeat="event in main.inventory.double">
                 <div class="popover-wrapper">
-                    <a href="#" editable-text="event.available" onaftersave="main.updateInventory(event)">{{ event.available || "FULL" }}</a>
+                    <a href="#" editable-text="event.available" e-required onbeforesave="main.validInventory($data)" onaftersave="main.updateInventory(event)">{{ event.available || "FULL" }}</a>
                 </div>
             </td>
         </tr>
@@ -183,7 +204,7 @@
             <td class="active">Price</td>
             <td class="center" ng-repeat="event in main.inventory.double">
                 <div class="popover-wrapper">
-                    <a href="#" editable-text="event.price" onaftersave="main.updatePrice(event)">{{ event.price|number:0 }} IDR</a>
+                    <a href="#" editable-text="event.price" e-required onbeforesave="main.validPrice($data)" onaftersave="main.updatePrice(event)">{{ event.price|number:0 }} IDR</a>
                 </div>
             </td>
         </tr>

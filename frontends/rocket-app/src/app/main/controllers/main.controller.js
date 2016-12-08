@@ -5,43 +5,52 @@ export class MainController {
         this.log = $log;
         this.scope = $scope;
         this.http = $http;
-        this.bulk = {};
-        var date = new Date();
-        this.getEvents(
-            new Date(date.getFullYear(), date.getMonth(), 1).toISOString(),
-            new Date(date.getFullYear(), date.getMonth(), 15).toISOString()
-        );
+        this.bulk = {
+        };
+
+        let date = this._getMonthToFrom(new Date(Date.now()));
+
+        this.getEvents(date.start, date.end);
+
+        // this.scope.bulk.start_date = new Date();
+        this.scope.beginDatePickerOpen = false;
+        // this.scope.bulk.end_date = new Date();
+        this.scope.endDatePickerOpen = false;
+
+        this.scope.datePickerOptions = {};
     }
 
     getNextMonth (current) {
-        current = new Date(current);
-        current.setMonth(current.getMonth() + 1);
-        this.getEvents(current.toISOString(), new Date(current.getFullYear(), current.getMonth(), 15).toISOString());
+
+        let currentObj = new Date(current);
+        let date = this._getMonthToFrom(new Date(currentObj.getFullYear(), currentObj.getMonth() + 1, 1));
+        this.getEvents(date.start, date.end);
     }
 
-    getEventsFrom (startDate) {
-        startDate = new Date(startDate);
-        startDate.setDate(startDate.getDate() + 1);
-        var endDate = new Date(startDate);
-        endDate.setDate(endDate.getDate() + 14);
-        this.getEvents(startDate.toISOString(), endDate.toISOString());
+    getMoreEvents (lastDisplayedDate) {
+        let currentObj = new Date(lastDisplayedDate);
+        let date = this._getMonthToFrom(new Date(currentObj.getFullYear(), currentObj.getMonth(), currentObj.getDate() + 1));
+        this.getEvents(date.start, date.end);
+    }
+
+    getEventsForMonth(date) {
+        this.log.info(date);
+        // let date = this._getMonthToFrom(new Date(date));
+        // this.getEvents(date.start, date.end)
     }
 
     getEvents(startDate, endDate) {
-        this.getDateIntervalList(startDate);
-        this.log.info(startDate, endDate);
-        var url = "/api/calendars?start=" + startDate + "&end=" + endDate;
+        let url = "/api/calendars?start=" + startDate.toISOString() + "&end=" + endDate.toISOString();
+        this.log.info("URL", url);
         this.http.get(url).then(function (response) {
-            var days = [],
+            let days = [],
                 inventory = {
                     single: [],
                     double: []
-                },
-                currentDate = null;
+                };
             angular.forEach(response.data, function (value, key) {
                 // keys // room
-                var dates = Object.keys(value);
-                currentDate = dates[0];
+                let dates = Object.keys(value);
                 days = dates.map(function (element) {
                     return new Date(element);
                 });
@@ -50,20 +59,22 @@ export class MainController {
                 });
             });
             this.inventory = inventory;
+            this.getDateIntervalList(startDate.toISOString()); // to stop by reference
             this.calendarDays = days;
-            this.currentDate = currentDate;
+            this.currentDate = startDate;
+
+            this.scope.daysDisplayed = Math.ceil(this._dateDiff(startDate, endDate));
         }.bind(this));
     }
 
     updatePrice (event) {
-        var data = {
+        let data = {
             price: event.price,
-            date: {
-                start: event.date.date,
-                end: event.date.date
-            },
+            start_date: event.date.date,
+            end_date: event.date.date,
             room: event.room.key
         };
+        this.log.info(data);
         this.http.post('/api/calendars/price', data).then(function (response) {
             this.log.info(response);
         }.bind(this));
@@ -71,12 +82,10 @@ export class MainController {
 
     updateInventory (event) {
         this.log.info(event);
-        var data = {
+        let data = {
             inventory: event.available,
-            date: {
-                start: event.date.date,
-                end: event.date.date
-            },
+            start_date: event.date.date,
+            end_date: event.date.date,
             room: event.room.key
         };
         this.log.info(data);
@@ -87,41 +96,104 @@ export class MainController {
     }
 
     updateItemBulk () {
-        var data = this.bulk,
+        let data = this.bulk,
             currentDate = new Date(this.currentDate);
-        this.bulk = {}; // reset the model.
-        this.log.info(data);
 
-        if (angular.isDefined(data.inventory)) {
-            this.log.info('START');
-            this.http.post('/api/calendars/inventory', data).then(function (response) {
-                this.log.info(response);
-                this.getEvents(
-                    currentDate.toISOString(),
-                    new Date(currentDate.getFullYear(), currentDate.getMonth(), 15).toISOString()
-                );
-            }.bind());
+        data.start_date = new Date(data.start_date);
+        data.end_date = new Date(data.end_date);
+
+        if (this.validDates(data.start_date, data.end_date)) {
+            this.bulk = {}; // reset the model.
+
+            if (angular.isDefined(data.inventory)) {
+                this.http.post('/api/calendars/inventory', data).then(function (response) {
+                    this.log.info(response);
+                    this.getEvents(
+                        currentDate.toISOString(),
+                        new Date(currentDate.getFullYear(), currentDate.getMonth(), 15).toISOString()
+                    );
+                }.bind());
+            }
+            if (angular.isDefined(data.price)) {
+                this.http.post('/api/calendars/price', data).then(function (response) {
+                    this.log.info(response);
+                    this.getEvents(
+                        currentDate.toISOString(),
+                        new Date(currentDate.getFullYear(), currentDate.getMonth(), 15).toISOString()
+                    );
+                }.bind(this));
+            }
+        } else {
+            // dates not valid.
         }
-        if (angular.isDefined(data.price)) {
-            this.http.post('/api/calendars/price', data).then(function (response) {
-                this.log.info(response);
-                this.getEvents(
-                    currentDate.toISOString(),
-                    new Date(currentDate.getFullYear(), currentDate.getMonth(), 15).toISOString()
-                );
-            }.bind(this));
-        }
+
     }
 
     getDateIntervalList (currentDate) {
-        currentDate = new Date(currentDate);
-        var months = [],
-            endDate = new Date(currentDate);
+        let date = new Date(currentDate),
+            endDate = new Date(date),
+            months = [];
         endDate.setMonth(endDate.getMonth() + 6);
-        while (currentDate < endDate) {
-            currentDate.setMonth(currentDate.getMonth() + 1);
-            months.push(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1));
+
+        while (date < endDate) {
+            date.setMonth(date.getMonth() + 1);
+            months.push(new Date(date.getFullYear(), date.getMonth(), 1));
         }
         this.scope.months = months;
     }
+
+    validPrice (value) {
+        return !isNaN(parseFloat(value)) && isFinite(value) ? true : value + " is not valid";
+    }
+
+    validInventory (value) {
+        return !isNaN(parseInt(value)) && isFinite(value) ? true : value + " is not valid";
+    }
+
+    _getDaysInMonth (y, m) {
+        return(m===2?y&3||!(y%25)&&y&15?28:29:30+(5546>>m&1));
+    }
+
+    _getMonthToFrom (currentDate) {
+
+        let days = this._getDaysInMonth(currentDate.getFullYear(), currentDate.getMonth() + 1),
+            halfMonth = Math.ceil(days / 2),
+            object = {};
+
+        if (halfMonth > currentDate.getDate()) {
+            // get from 1 ...
+            object = {
+                start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 1),
+                end: new Date(currentDate.getFullYear(), currentDate.getMonth(), halfMonth)
+            };
+        } else {
+            object = {
+                start: new Date(currentDate.getFullYear(), currentDate.getMonth(), halfMonth + 1),
+                end: new Date(currentDate.getFullYear(), currentDate.getMonth(), days)
+            }
+        }
+        return object;
+    }
+
+    _dateDiff (startDate, endDate) {
+        let start = Math.floor( startDate.getTime() / (3600*24*1000)); //days as integer from..
+        let end   = Math.floor( endDate.getTime() / (3600*24*1000)); //days as integer from..
+        return (end - start) + 1; // exact dates
+    }
+
+    openBeginDatePicker () {
+        this.scope.beginDatePickerOpen = !this.scope.beginDatePickerOpen;
+        this.scope.datePickerOptions.minDate = null;
+        if (this.bulk.end_date !== null) {
+            this.scope.datePickerOptions.maxDate = new Date(this.bulk.end_date);
+        }
+    }
+
+    openEndDatePicker () {
+        this.scope.endDatePickerOpen = !this.scope.endDatePickerOpen;
+        this.scope.datePickerOptions.maxDate = null;
+        if (this.bulk.start_date !== null) {
+            this.scope.datePickerOptions.minDate = new Date(this.bulk.start_date);
+        }
+    };
 }
