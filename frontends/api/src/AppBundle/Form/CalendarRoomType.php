@@ -60,15 +60,18 @@ class CalendarRoomType extends AbstractType
             ChoiceType::class,
             [
                 'choices' => [
-                    'MO' => 'Mondays',
-                    'TU' => 'Tuesdays',
-                    'WE' => 'Wednesdays',
-                    'TH' => 'Thursdays',
-                    'FR' => 'Fridays',
-                    'SA' => 'Saturdays',
-                    'SU' => 'Sundays'
+                    'All Days' => 'ALL',
+                    'Weekdays' => 'WEEKDAY',
+                    'Weekends' => 'WEEKEND',
+                    'Mondays' => 'MO',
+                    'Tuesdays' => 'TU',
+                    'Wednesdays' => 'WE',
+                    'Thursdays' => 'TH',
+                    'Fridays' => 'FR',
+                    'Saturdays' => 'SA',
+                    'Sundays' => 'SU'
                 ],
-                'mapped' => false
+                'multiple' => true
             ]
         );
     }

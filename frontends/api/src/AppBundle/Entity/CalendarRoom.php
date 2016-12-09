@@ -61,7 +61,7 @@ class CalendarRoom
     /**
      * @param DateTime $dateAt
      */
-    public function setDateAt(DateTime $dateAt)
+    public function setDateAt($dateAt)
     {
         $this->dateAt = $dateAt;
     }

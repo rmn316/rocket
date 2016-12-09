@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 use AppBundle\Entity\CalendarRoom;
 use AppBundle\Form\CalendarRoomInventoryType;
 use AppBundle\Form\CalendarRoomPriceType;
+use AppBundle\Form\CalendarRoomType;
 use AppBundle\Service\CalendarRoomBuilder;
 use AppBundle\Service\CalendarUpdater;
 use AppBundle\Service\InventoryBuilder;
@@ -86,7 +87,7 @@ class CalendarController extends Controller
 
         $request->request->replace(json_decode($request->getContent(), true));
 
-        $form = $this->createForm(CalendarRoomInventoryType::class, new CalendarRoom());
+        $form = $this->createForm(CalendarRoomType::class, new CalendarRoom());
         $form->submit($request->request->all());
 
         try {

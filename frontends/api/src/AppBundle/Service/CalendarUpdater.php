@@ -75,47 +75,62 @@ class CalendarUpdater implements Updater
 
         $period = new DatePeriod($formData->getStartAt(), new DateInterval('P1D'), $inclusiveEndDate);
         foreach ($period as $day) {
+//            $dateObj = clone $day;
             if ($this->guardAgainstExcludedDate($formData, $day)) {
                 continue;
             }
 
-            $calendarRoom = $this->populateCalendarRoom($day, $formData, $calendarRooms);
-            $this->entityManager->persist($calendarRoom);
-            $this->entityManager->flush($calendarRoom);
+            $this->persistCalendarRoom($day, $formData, $calendarRooms);
         }
     }
 
-    private function populateCalendarRoom(DateTime $day, CalendarRoom $formData, ArrayCollection $collection)
+    private function persistCalendarRoom(DateTime $day, CalendarRoom $formData, ArrayCollection $collection)
     {
-        /** @var CalendarRoom[] $calendarRoom */
-        $calendarRoom = $collection->filter(function($calendarRoom) use ($day, $formData){
-            return $calendarRoom->getStartAt() == $day && $calendarRoom->getRoom() == $formData->getRoom()->getKey();
+        /** @var ArrayCollection $calendarRooms */
+        $calendarRooms = $collection->filter(function($calendarRoom) use ($day, $formData){
+            $condition1 = $calendarRoom->getDateAt() == $day;
+            $condition2 = $calendarRoom->getRoom()->getKey() === $formData->getRoom()->getKey();
+            return $condition1 && $condition2;
         });
 
-        if ($calendarRoom[0] instanceof CalendarRoom && $calendarRoom[0]->getId() > 0) {
-            $calendarRoom = $calendarRoom[0];
+        if (count($calendarRooms) > 0) {
+            /** @var CalendarRoom $calendarRoom */
+            $calendarRoom = $calendarRooms->first();
+            $calendarRoom->setInventory($this->getDefaultInventory($formData));
+            $calendarRoom->setPrice($formData->getPrice() > 0 ? $formData->getPrice() : $calendarRoom->getPrice());
         } else {
-            $calendarRoom = $formData;
+            $calendarRoom = new CalendarRoom();
+            $calendarRoom->setRoom($formData->getRoom());
+            $calendarRoom->setInventory($this->getDefaultInventory($formData));
+            $calendarRoom->setPrice($formData->getPrice());
             $calendarRoom->setDateAt($day);
-
-            $this->getDefaultInventory($calendarRoom);
-            $calendarRoom->setPrice($calendarRoom->getPrice() > 0 ? $calendarRoom->getPrice() : 0);
         }
+
+        $this->entityManager->persist($calendarRoom);
+        $this->entityManager->flush($calendarRoom);
 
         return $calendarRoom;
     }
 
+    /**
+     * @param CalendarRoom $calendarRoom
+     * @return int|null
+     */
     private function getDefaultInventory(CalendarRoom $calendarRoom)
     {
         if (!$calendarRoom->getInventory() > 0) {
+            $value = null;
             switch ($calendarRoom->getRoom()->getKey()) {
                 case Room::DOUBLE:
-                    $calendarRoom->setInventory(CalendarRoom::DEFAULT_INVENTORY_DOUBLE);
+                    $value = CalendarRoom::DEFAULT_INVENTORY_DOUBLE;
                     break;
                 case Room::SINGLE:
-                    $calendarRoom->setInventory(CalendarRoom::DEFAULT_INVENTORY_SINGLE);
+                    $value = CalendarRoom::DEFAULT_INVENTORY_SINGLE;
                     break;
             }
+            return $value;
+        } else {
+            return $calendarRoom->getInventory();
         }
     }
 
@@ -128,17 +143,21 @@ class CalendarUpdater implements Updater
 
     private function guardAgainstExcludedDate(CalendarRoom $calendarRoom, DateTime $date)
     {
+        $days = $this->updateDaysRestriction($calendarRoom->getDays());
         $daysFilter = array_search($date->format('w'), $calendarRoom->getFilterDays());
-        if (in_array($daysFilter, $this->processDaysRestriction($calendarRoom->getDays()))) {
-            return true;
-        } else {
+
+        if (count($days) === 0) {
             return false;
+        } elseif (in_array($daysFilter, $days)) {
+            return false;
+        } else {
+            return true;
         }
     }
 
-    private function processDaysRestriction(array $days)
+    private function updateDaysRestriction(array $days)
     {
-        $restriction = [];
+        $restriction = $output = [];
         foreach ($days as $key => $value) {
             switch (strtoupper($value)) {
                 case 'WEEKEND':
@@ -150,10 +169,12 @@ class CalendarUpdater implements Updater
                     unset($days[$key]);
                     break;
                 case 'ALL':
+                    $restriction = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
                     unset($days[$key]);
                     break;
             }
+            $output = array_merge($days, $restriction);
         }
-        return array_replace($days, $restriction);
+        return $output;
     }
 }
