@@ -19,11 +19,11 @@ AppBundle\Entity\CalendarRoom:
           groups:
             - InventoryIndividual
             - CalendarRoom
-    startAt:
+    start_date:
       - Date:
           groups:
             - CalendarRoom
-    endAt:
+    end_date:
       - Date:
           groups:
             - CalendarRoom

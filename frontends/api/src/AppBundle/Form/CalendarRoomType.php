@@ -31,17 +31,19 @@ class CalendarRoomType extends AbstractType
                 'required' => true
             ]
         )->add(
-            'start_at',
+            'start_date',
             DateType::class,
             [
                 'required' => true,
+                'property_path' => 'startAt',
                 'widget' => 'single_text'
             ]
         )->add(
-            'end_at',
+            'end_date',
             DateType::class,
             [
                 'required' => true,
+                'property_path' => 'endAt',
                 'widget' => 'single_text'
             ]
         )->add(

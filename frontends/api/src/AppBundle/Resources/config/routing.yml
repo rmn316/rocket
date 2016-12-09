@@ -4,7 +4,7 @@ app.default.get:
   methods: [GET]
 
 app.default.post:
-  path: /calendars
+  path: /calendars/bulk
   defaults: { _controller: AppBundle:Calendar:post, _format: json}
   methods: [POST]
 

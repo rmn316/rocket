@@ -116,7 +116,7 @@ export class MainController {
 
         this.bulk = {}; // reset the model.
 
-        this.http.post('/api/calendars', data).then(function (response) {
+        this.http.post('/api/calendars/bulk', data).then(function (response) {
             this.log.info(response);
             this.getEvents(
                 currentDate.toUTCString(),
