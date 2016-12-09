@@ -1,0 +1,29 @@
+AppBundle\Entity\CalendarRoom:
+  properties:
+    room:
+      - Valid:
+    dateAt:
+      - Date:
+          groups:
+            - InventoryIndividual
+            - PriceIndividual
+    price:
+      - GreaterThanOrEqual:
+          value: 0
+          groups:
+            - PriceIndividual
+            - CalendarRoom
+    inventory:
+      - GreaterThanOrEqual:
+          value: 0
+          groups:
+            - InventoryIndividual
+            - CalendarRoom
+    startAt:
+      - Date:
+          groups:
+            - CalendarRoom
+    endAt:
+      - Date:
+          groups:
+            - CalendarRoom

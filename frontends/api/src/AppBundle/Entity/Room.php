@@ -8,6 +8,9 @@ namespace AppBundle\Entity;
  */
 class Room
 {
+    const DOUBLE = 'double';
+    const SINGLE = 'single';
+
     /** @var integer */
     private $id;
     /** @var string */

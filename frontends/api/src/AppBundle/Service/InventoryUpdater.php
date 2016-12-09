@@ -3,60 +3,78 @@
 namespace AppBundle\Service;
 
 use AppBundle\Entity\CalendarInventoryRoom;
+use AppBundle\Entity\CalendarRoom;
 use AppBundle\Entity\Room;
+use AppBundle\Exception\BadRequestException;
+use AppBundle\Repository\CalendarRoomRepository;
 use AppBundle\Repository\RoomRepository;
 use DateTime;
 use Doctrine\ORM\EntityManager;
 use Recurr\Rule;
+use Symfony\Component\Form\Form;
 
-class InventoryUpdater extends Updater
+class InventoryUpdater implements Updater
 {
+    /** @var CalendarRoomRepository */
+    private $calendarRoomRepository;
+    /** @var RoomRepository */
+    private $roomRepository;
+    /** @var EntityManager */
+    private $entityManager;
+
     /**
-     * @param DateTime $startDate
-     * @param DateTime $endDate
-     * @param $inventory
-     * @param $roomType
-     * @param array $days
+     * InventoryUpdater constructor.
+     * @param EntityManager $entityManager
+     * @param CalendarRoomRepository $calendarRoomRepository
+     * @param RoomRepository $roomRepository
+     */
+    public function __construct(
+        EntityManager $entityManager,
+        CalendarRoomRepository $calendarRoomRepository,
+        RoomRepository $roomRepository
+    ) {
+        $this->calendarRoomRepository = $calendarRoomRepository;
+        $this->roomRepository = $roomRepository;
+        $this->entityManager = $entityManager;
+    }
+
+    /**
+     * @param Form $form
      * @return bool
      */
-    public function update(DateTime $startDate, DateTime $endDate, $inventory, $roomType, array $days = [])
+    public function update(Form $form)
     {
-        $rule = $this->buildRule($startDate, $endDate, $days);
+        $this->validate($form);
 
-        $rooms = $this->getRooms($roomType);
-        foreach ($rooms as $room) {
-            $this->getEntityForPersist($startDate, $endDate, $rule, $room, $inventory);
+        /** @var CalendarRoom $calendarRoom */
+        $calendarRoom = $form->getData();
+
+        $room = $this->roomRepository->findOneBy(['key' => $calendarRoom->getRoom()->getKey()]);
+        /** @var CalendarRoom $existingCalendarRoom */
+        $existingCalendarRoom = $this->calendarRoomRepository->findOneBy(
+            ['dateAt' => $calendarRoom->getDateAt(), 'room' => $room]
+        );
+
+        if ($existingCalendarRoom !== null) {
+            $existingCalendarRoom->setInventory($calendarRoom->getInventory());
+            $this->entityManager->persist($existingCalendarRoom);
+            $this->entityManager->flush($existingCalendarRoom);
+        } else {
+            $calendarRoom->setRoom($room);
+            $this->entityManager->persist($calendarRoom);
+            $this->entityManager->flush($calendarRoom);
         }
         return true;
     }
 
     /**
-     * @param DateTime $startDate
-     * @param DateTime $endDate
-     * @param Rule $rule
-     * @param Room $room
-     * @param $value
-     * @return CalendarInventoryRoom
+     * @param Form $form
+     * @throws BadRequestException
      */
-    protected function getEntityForPersist(DateTime $startDate, DateTime $endDate, Rule $rule, Room $room, $value)
+    private function validate(Form $form)
     {
-        $repository = $this->entityManager->getRepository(CalendarInventoryRoom::class);
-        $calendarInventoryRoom = $repository->findOneBy(
-            ['startAt' => $startDate, 'endAt' => $endDate, 'rule' => $rule->getString(), 'room' => $room]
-        );
-        if ($calendarInventoryRoom === null) {
-            $calendarInventoryRoom = new CalendarInventoryRoom();
-            $calendarInventoryRoom->setCreatedAt(new DateTime());
+        if (!$form->isValid()) {
+            throw new BadRequestException($form->getErrors());
         }
-
-        $calendarInventoryRoom->setInventory($value);
-        $calendarInventoryRoom->setRoom($room);
-        $calendarInventoryRoom->setRule($rule->getString());
-        $calendarInventoryRoom->setStartAt($startDate);
-        $calendarInventoryRoom->setEndAt($endDate);
-        $this->entityManager->persist($calendarInventoryRoom);
-        $this->entityManager->flush($calendarInventoryRoom);
-
-        return $calendarInventoryRoom;
     }
 }

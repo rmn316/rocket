@@ -3,61 +3,80 @@
 namespace AppBundle\Service;
 
 use AppBundle\Entity\CalendarPriceRoom;
+use AppBundle\Entity\CalendarRoom;
 use AppBundle\Entity\Room;
 use AppBundle\Exception\BadRequestException;
+use AppBundle\Repository\CalendarRoomRepository;
+use AppBundle\Repository\RoomRepository;
 use DateTime;
+use Doctrine\ORM\EntityManager;
 use Recurr\Rule;
 use Symfony\Component\Form\Form;
 use Symfony\Component\HttpFoundation\Request;
 
-class PriceUpdater extends Updater
+class PriceUpdater implements Updater
 {
+    /** @var CalendarRoomRepository */
+    private $calendarRoomRepository;
+    /** @var RoomRepository */
+    private $roomRepository;
+    /** @var EntityManager */
+    private $entityManager;
+
     /**
-     * @param DateTime $startDate
-     * @param DateTime $endDate
-     * @param string $price
-     * @param string $roomType
-     * @param array $days
+     * PriceUpdater constructor.
+     * @param EntityManager $entityManager
+     * @param CalendarRoomRepository $calendarRoomRepository
+     * @param RoomRepository $roomRepository
+     */
+    public function __construct(
+        EntityManager $entityManager,
+        CalendarRoomRepository $calendarRoomRepository,
+        RoomRepository $roomRepository
+    ) {
+        $this->calendarRoomRepository = $calendarRoomRepository;
+        $this->roomRepository = $roomRepository;
+        $this->entityManager = $entityManager;
+    }
+
+    /**
+     * @param Form $form
      * @return bool
      */
-    public function update(DateTime $startDate, DateTime $endDate, $price, $roomType, array $days = [])
+    public function update(Form $form)
     {
-        $rule = $this->buildRule($startDate, $endDate, $days);
+        $this->validate($form);
 
-        $rooms = $this->getRooms($roomType);
-        foreach ($rooms as $room) {
-            $this->getEntityForPersist($startDate, $endDate, $rule, $room, $price);
+        /** @var CalendarRoom $calendarRoom */
+        $calendarRoom = $form->getData();
+
+        /** @var Room $room */
+        $room = $this->roomRepository->findOneBy(['key' => $calendarRoom->getRoom()->getKey()]);
+        /** @var CalendarRoom $existingCalendarRoom */
+        $existingCalendarRoom = $this->calendarRoomRepository->findOneBy(
+            ['dateAt' => $calendarRoom->getDateAt(), 'room' => $room]
+        );
+
+        if ($existingCalendarRoom !== null) {
+            $existingCalendarRoom->setPrice($calendarRoom->getPrice());
+            $this->entityManager->persist($existingCalendarRoom);
+            $this->entityManager->flush($existingCalendarRoom);
+        } else {
+            $calendarRoom->setRoom($room);
+            $this->entityManager->persist($calendarRoom);
+            $this->entityManager->flush($calendarRoom);
         }
         return true;
     }
 
     /**
-     * @param DateTime $startDate
-     * @param DateTime $endDate
-     * @param Rule $rule
-     * @param Room $room
-     * @param $value
-     * @return CalendarPriceRoom
+     * @param Form $form
+     * @throws BadRequestException
      */
-    protected function getEntityForPersist(DateTime $startDate, DateTime $endDate, Rule $rule, Room $room, $value)
+    private function validate(Form $form)
     {
-        $repository = $this->entityManager->getRepository(CalendarPriceRoom::class);
-        $calendarPriceRoom = $repository->findOneBy(
-            ['startAt' => $startDate, 'endAt' => $endDate, 'rule' => $rule->getString(), 'room' => $room]
-        );
-        if ($calendarPriceRoom === null) {
-            $calendarPriceRoom = new CalendarPriceRoom();
-            $calendarPriceRoom->setCreatedAt(new DateTime());
+        if (!$form->isValid()) {
+            throw new BadRequestException($form->getErrors());
         }
-
-        $calendarPriceRoom->setPrice($value);
-        $calendarPriceRoom->setRoom($room);
-        $calendarPriceRoom->setRule($rule->getString());
-        $calendarPriceRoom->setStartAt($startDate);
-        $calendarPriceRoom->setEndAt($endDate);
-        $this->entityManager->persist($calendarPriceRoom);
-        $this->entityManager->flush($calendarPriceRoom);
-
-        return $calendarPriceRoom;
     }
 }

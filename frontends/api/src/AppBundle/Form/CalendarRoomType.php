@@ -3,31 +3,46 @@
 namespace AppBundle\Form;
 
 use AppBundle\Entity\CalendarPriceRoom;
+use AppBundle\Entity\CalendarRoom;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class CalendarPriceRoomType extends AbstractType
+/**
+ * Class CalendarRoomType
+ * @package AppBundle\Form
+ */
+class CalendarRoomType extends AbstractType
 {
+    /**
+     * @param FormBuilderInterface $builder
+     * @param array $options
+     */
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder->add(
-            'room'
-
+            'room',
+            RoomType::class,
+            [
+                'required' => true
+            ]
         )->add(
             'start_at',
             DateType::class,
             [
-                'required' => true
+                'required' => true,
+                'widget' => 'single_text'
             ]
         )->add(
             'end_at',
             DateType::class,
             [
-                'required' => true
+                'required' => true,
+                'widget' => 'single_text'
             ]
         )->add(
             'price',
@@ -35,6 +50,9 @@ class CalendarPriceRoomType extends AbstractType
             [
                 'required' => true
             ]
+        )->add(
+            'inventory',
+            IntegerType::class
         )->add(
             'days',
             ChoiceType::class,
@@ -53,14 +71,24 @@ class CalendarPriceRoomType extends AbstractType
         );
     }
 
+    /**
+     * @param OptionsResolver $resolver
+     */
     public function configureOptions(OptionsResolver $resolver)
     {
-        $resolver->setDefaults(['data_class' => CalendarPriceRoom::class]);
+        $resolver->setDefaults(
+            [
+                'data_class' => CalendarRoom::class,
+                'validation_groups' => ['CalendarRoom']
+            ]
+        );
     }
 
+    /**
+     * @return string
+     */
     public function getBlockPrefix()
     {
-        return 'calendar_price_room';
+        return 'calendar_room';
     }
-
 }

@@ -6,45 +6,36 @@ services:
       - getRepository
     arguments: [AppBundle\Entity\Room]
 
-  app.repository.calendar_price_room:
-    class: AppBundle\Repository\CalendarPriceRoomRepository
+  app.repository.calendar_room:
+    class: AppBundle\Repository\CalendarRoomRepository
     factory:
       - "@doctrine.orm.entity_manager"
       - getRepository
-    arguments: [AppBundle\Entity\CalendarPriceRoom]
+    arguments: [AppBundle\Entity\CalendarRoom]
 
-  app.repository.calendar_inventory_room:
-      class: AppBundle\Repository\CalendarInventoryRoomRepository
-      factory:
-        - "@doctrine.orm.entity_manager"
-        - getRepository
-      arguments: [AppBundle\Entity\CalendarInventoryRoom]
-
-  app.service.calendar_builder:
-    class: AppBundle\Service\CalendarRoomBuilder
+  app.service.calendar.builder:
+    class: AppBundle\Service\CalendarBuilder
     arguments:
-      - "@app.service.price_builder"
-      - "@app.service.inventory_builder"
+      - "@app.repository.calendar_room"
       - "@app.repository.room"
 
-  app.service.inventory_builder:
-    class: AppBundle\Service\InventoryBuilder
+  app.service.calendar_updater:
+    class: AppBundle\Service\CalendarUpdater
     arguments:
-      - "@app.repository.calendar_inventory_room"
-
-  app.service.price_builder:
-    class: AppBundle\Service\PriceBuilder
-    arguments:
-      - "@app.repository.calendar_price_room"
+      - "@doctrine.orm.entity_manager"
+      - "@app.repository.calendar_room"
+      - "@app.repository.room"
 
   app.service.price_updater:
     class: AppBundle\Service\PriceUpdater
     arguments:
       - "@doctrine.orm.entity_manager"
+      - "@app.repository.calendar_room"
       - "@app.repository.room"
 
   app.service.inventory_updater:
       class: AppBundle\Service\InventoryUpdater
       arguments:
         - "@doctrine.orm.entity_manager"
+        - "@app.repository.calendar_room"
         - "@app.repository.room"

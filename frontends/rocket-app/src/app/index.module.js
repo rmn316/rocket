@@ -7,7 +7,7 @@ import {MainController} from './main/controllers/main.controller';
 
 angular.module(
     'frontendApp',
-    ['ngAnimate', 'ngTouch', 'ngSanitize', 'ngAria', 'ui.router', 'ui.bootstrap', 'ui.bootstrap.showErrors', 'xeditable']
+    ['ngAnimate', 'ngTouch', 'ngSanitize', 'ngAria', 'ui.router', 'ui.bootstrap', 'ui.bootstrap.showErrors', 'angularMoment', 'xeditable']
 )
     .config(config)
     .config(routerConfig)

@@ -2,7 +2,11 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\CalendarRoom;
+use AppBundle\Form\CalendarRoomInventoryType;
+use AppBundle\Form\CalendarRoomPriceType;
 use AppBundle\Service\CalendarRoomBuilder;
+use AppBundle\Service\CalendarUpdater;
 use AppBundle\Service\InventoryBuilder;
 use AppBundle\Service\InventoryUpdater;
 use AppBundle\Service\PriceUpdater;
@@ -17,7 +21,7 @@ class CalendarController extends Controller
     public function getAction(Request $request)
     {
         /** @var CalendarRoomBuilder $builder */
-        $builder = $this->get('app.service.calendar_builder');
+        $builder = $this->get('app.service.calendar.builder');
 
         try {
             $result = $builder->build(
@@ -42,14 +46,10 @@ class CalendarController extends Controller
 
         $request->request->replace(json_decode($request->getContent(), true));
 
+        $form = $this->createForm(CalendarRoomPriceType::class, new CalendarRoom());
+        $form->submit($request->request->all());
         try {
-            $result = $service->update(
-                new DateTime($request->request->get('start_date')),
-                new DateTime($request->request->get('end_date')),
-                $request->request->get('price'),
-                $request->request->get('room'),
-                is_array($request->request->get('days')) ? $request->request->get('days') : []
-            );
+            $result = $service->update($form);
         } catch (Exception $e) {
             throw $e;
         }
@@ -68,14 +68,29 @@ class CalendarController extends Controller
 
         $request->request->replace(json_decode($request->getContent(), true));
 
+        $form = $this->createForm(CalendarRoomInventoryType::class, new CalendarRoom());
+        $form->submit($request->request->all());
+
         try {
-            $result = $service->update(
-                new DateTime($request->request->get('start_date')),
-                new DateTime($request->request->get('end_date')),
-                $request->request->get('inventory'),
-                $request->request->get('room'),
-                is_array($request->request->get('days')) ? $request->request->get('days') : []
-            );
+            $result = $service->update($form);
+        } catch (Exception $e) {
+            throw $e;
+        }
+        return new JsonResponse($result);
+    }
+
+    public function postCalendarAction(Request $request)
+    {
+        /** @var CalendarUpdater $service */
+        $service = $this->get('app.service.calendar_updater');
+
+        $request->request->replace(json_decode($request->getContent(), true));
+
+        $form = $this->createForm(CalendarRoomInventoryType::class, new CalendarRoom());
+        $form->submit($request->request->all());
+
+        try {
+            $result = $service->update($form);
         } catch (Exception $e) {
             throw $e;
         }

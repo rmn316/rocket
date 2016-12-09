@@ -1,22 +1,18 @@
-AppBundle\Entity\CalendarInventoryRoom:
+AppBundle\Entity\CalendarRoom:
   type: entity
-  table: calendar_inventory_rooms
-  repositoryClass: AppBundle\Repository\CalendarInventoryRoomRepository
+  table: calendar_rooms
+  repositoryClass: AppBundle\Repository\CalendarRoomRepository
   id:
     id:
       type: integer
       generator: { strategy: AUTO }
   fields:
-    startAt:
+    dateAt:
       type: date
-    endAt:
-      type: date
-    rule:
-      type: string
+    price:
+      type: decimal
     inventory:
       type: integer
-    createdAt:
-      type: datetime
   manyToOne:
     room:
       targetEntity: Room
