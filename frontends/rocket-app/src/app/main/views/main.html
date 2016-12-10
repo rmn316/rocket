@@ -1,6 +1,9 @@
 <div class="container">
     <section class="well well-sm">
         <form name="bulk" role="form" class="form-horizontal" novalidate ng-submit="main.updateItemBulk()">
+            <div ng-show="validationError" class="alert alert-danger">
+                Form contains validation errors, please update and re-submit
+            </div>
             <div class="row">
                 <fieldset class="col-sm-12">
                     <legend>Select Room</legend>
@@ -117,7 +120,7 @@
                         <label for="price" class="col-sm-4 control-label">Change Price To:</label>
                         <div class="col-sm-8">
                             <input id="price" name="price" type="number" class="form-control" ng-model="main.bulk.price" />
-                            <div ng-show="bulk.price.$invalid" class="help-block">Please enter a valid value for the price of rooms nightly</div>
+                            <div class="help-block">Please enter a valid value for the price of rooms nightly</div>
                         </div>
                     </div>
                 </fieldset>

@@ -79,7 +79,6 @@ export class MainController {
             date: this._parseDate(event.date),
             room: event.room
         };
-        this.log.info(data);
         this.http.post('/api/calendars/price', data).then(function (response) {
             this.log.info(response);
         }.bind(this));
@@ -91,7 +90,6 @@ export class MainController {
             date: this._parseDate(event.date),
             room: event.room
         };
-        this.log.info("data", data);
 
         this.http.post('/api/calendars/inventory', data).then(function (response) {
             this.log.info(response);
@@ -99,21 +97,24 @@ export class MainController {
     }
 
     updateItemBulk () {
+        this.log.info(this.bulk);
         let date,
             data = this.bulk,
             currentDate = this._moment(this.currentDate).utc();
         // convert keys to array...
-        data.days = angular.isArray(this.bulk.days) ? Object.keys(this.bulk.days) : [];
+        data.days = angular.isObject(this.bulk.days) ? Object.keys(this.bulk.days) : [];
 
-        this.log.info(this.bulk);
-
-        this.http.post('/api/calendars/bulk', data).then(function (response) {
-            this.log.info(response);
-            date = this._getMonthToFrom(currentDate);
-            this.log.info(date);
-            this.getEvents(date.start, date.end);
-            this.bulk = {}; // reset the model.
-        }.bind(this));
+        if (this.validBulk(data)) {
+            this.scope.validationError = false;
+            this.http.post('/api/calendars/bulk', data).then(function (response) {
+                this.log.info(response);
+                date = this._getMonthToFrom(currentDate);
+                this.getEvents(date.start, date.end);
+                this.bulk = {}; // reset the model.
+            }.bind(this));
+        } else {
+            this.scope.validationError = true;
+        }
     }
 
     getDateIntervalList (currentDate) {
@@ -127,6 +128,22 @@ export class MainController {
             date = date.clone();
         }
         this.scope.months = months;
+    }
+
+    validBulk (data) {
+        if (data.room.key === null) {
+            return false;
+        } else if (angular.isUndefined(data.price) && angular.isUndefined(data.inventory)) {
+            return false;
+        } else if (!angular.isDate(data.start_date)) {
+            return false;
+        } else if (!angular.isDate(data.end_date)) {
+            return false;
+        } else if (data.start_date > data.end_date) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     validPrice (value) {
@@ -149,7 +166,7 @@ export class MainController {
     }
 
     _getDaysInMonth (date) {
-        return date.add('months', 1).date(1).subtract('days', 1).format('DD');
+        return date.add(1, 'months').date(1).subtract(1, 'days').format('DD');
     }
 
     _getMonthToFrom (currentDate) {
