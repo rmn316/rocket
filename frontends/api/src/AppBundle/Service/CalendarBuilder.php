@@ -3,6 +3,7 @@
 namespace AppBundle\Service;
 
 use AppBundle\Entity\CalendarRoom;
+use AppBundle\Entity\Room;
 use AppBundle\Repository\CalendarRoomRepository;
 use AppBundle\Repository\RoomRepository;
 use DateInterval;
@@ -43,7 +44,7 @@ class CalendarBuilder
      * @param DateTime $endObj
      * @return array
      */
-    private function buildEmptyDates(DateTime $startObj, DateTime $endObj)
+    private function buildEmptyDates(DateTime $startObj, DateTime $endObj, Room $room)
     {
         $dates = [];
         $inclusiveEndDate = clone $endObj;
@@ -53,7 +54,9 @@ class CalendarBuilder
         $period = new DatePeriod($startObj, new DateInterval('P1D'), $inclusiveEndDate);
         foreach ($period as $day) {
             $dates[$day->format('Y-m-d')] = [
-                'room' => null,
+                'room' => [
+                    'key' => $room->getKey()
+                ],
                 'date' => $day->format('Y-m-d'),
                 'price' => 0,
                 'inventory' => 0
@@ -71,11 +74,9 @@ class CalendarBuilder
     private function buildEmptyResultSet(DateTime $startObj, DateTime $endObj, $roomType = null)
     {
         $rooms = $this->roomRepository->findAll();
-
-        $emptyDates = $this->buildEmptyDates($startObj, $endObj);
         foreach ($rooms as $room) {
             if ($roomType === null || $roomType === $room->getKey()) {
-                $this->output[$room->getKey()] = $emptyDates;
+                $this->output[$room->getKey()] = $this->buildEmptyDates($startObj, $endObj, $room);
             }
         }
     }
