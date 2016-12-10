@@ -72,13 +72,13 @@
                     <legend>Refine Days</legend>
                     <div class="col-sm-3">
                         <div>
-                            <label class="checkbox"><input type="checkbox" ng-model="main.bulk.days.all"> All Days</label>
+                            <label class="checkbox"><input type="checkbox" ng-model="main.bulk.days.ALL"> All Days</label>
                         </div>
                         <div>
-                            <label class="checkbox"><input type="checkbox" ng-model="main.bulk.days.weekday"> All Weekdays</label>
+                            <label class="checkbox"><input type="checkbox" ng-model="main.bulk.days.WEEKDAY"> All Weekdays</label>
                         </div>
                         <div>
-                            <label class="checkbox"><input type="checkbox" ng-model="main.bulk.days.weekend"> All Weekends</label>
+                            <label class="checkbox"><input type="checkbox" ng-model="main.bulk.days.WEEKEND"> All Weekends</label>
                         </div>
                     </div>
                     <div class="col-sm-3">
@@ -151,11 +151,11 @@
                         <a uib-dropdown-toggle><i class="glyphicon glyphicon-chevron-down"></i></a>
                         <ul uib-dropdown-menu class="col-sm-12">
                             <li ng-repeat="item in months">
-                                <a ng-click="main.getEventsForMonth(item)">{{ item|date:"MMMM', 'yyyy" }}</a>
+                                <a ng-click="main.getEventsForMonth(item)">{{ item.format("MMMM, YYYY") }}</a>
                             </li>
                         </ul>
                     </span>
-                    {{ main.currentDate|date:"MMMM" }}
+                    {{ main.currentDate.format('MMMM') }}
                     <a ng-click="main.getNextMonth(main.currentDate)"><i class="glyphicon glyphicon-chevron-right"></i></a>
                 </th>
             </tr>
@@ -211,3 +211,4 @@
         </tbody>
     </table>
 </div>
+<pre>{{ main.bulk || json }}</pre>

@@ -6,45 +6,36 @@ export class MainController {
         this.log = $log;
         this.scope = $scope;
         this.http = $http;
-        this.bulk = {
-        };
+        this.bulk = {};
 
-        let date = this._getMonthToFrom(new Date());
+        let date = this._getMonthToFrom(this._moment().utc());
 
         this.getEvents(date.start, date.end);
 
-        // this.scope.bulk.start_date = new Date();
         this.scope.beginDatePickerOpen = false;
-        // this.scope.bulk.end_date = new Date();
         this.scope.endDatePickerOpen = false;
-
         this.scope.datePickerOptions = {};
     }
 
     getNextMonth (current) {
-
-        let currentObj = new Date(current);
-        let date = this._getMonthToFrom(new Date(currentObj.getUTCFullYear(), currentObj.getUTCMonth() + 1, 1));
+        let currentObj = this._moment(current).utc().add(1, 'months');
+        let date = this._getMonthToFrom(currentObj);
         this.getEvents(date.start, date.end);
     }
 
     getMoreEvents (lastDisplayedDate) {
-        let currentObj = new Date(lastDisplayedDate);
-        let date = this._getMonthToFrom(new Date(currentObj.getUTCFullYear(), currentObj.getUTCMonth(), currentObj.getUTCDate() + 1));
-        this.log.info("mod", date);
+        let currentObj = this._moment(lastDisplayedDate).utc().add(1, 'days'),
+            date = this._getMonthToFrom(currentObj);
         this.getEvents(date.start, date.end);
     }
 
     getEventsForMonth(date) {
-        let dateObj = this._getMonthToFrom(new Date(date));
+        let dateObj = this._getMonthToFrom(this._moment(date).utc());
         this.getEvents(dateObj.start, dateObj.end);
     }
 
     getEvents(startDate, endDate) {
-        this.log.info("EVT", startDate);
-        let startObj = new Date(startDate),
-            endObj = new Date(endDate),
-            url = "/api/calendars?start=" + startDate.toUTCString() + "&end=" + endDate.toUTCString();
+        let url = "/api/calendars?start=" + this._parseDate(startDate) + "&end=" + this._parseDate(endDate);
         this.log.info("URL", url);
         this.http.get(url).then(function (response) {
             let days = [],
@@ -66,15 +57,17 @@ export class MainController {
                         };
                     }
                     if (value1.date == null) {
-                        value1.date = new Date(value);
+                        value1.date = this._moment(value).utc();
+                    } else {
+                        value1.date = this._moment(value1.date.date).utc();
                     }
                     inventory[key].push({available: value1.inventory, price: value1.price, date: value1.date, room: value1.room});
-                });
-            });
+                }.bind(this));
+            }.bind(this));
+            this.currentDate = this._moment(startDate).utc();
             this.inventory = inventory;
-            this.getDateIntervalList(startDate.toUTCString()); // to stop by reference
+            this.getDateIntervalList(this.currentDate.clone()); // to stop by reference
             this.calendarDays = days;
-            this.currentDate = startDate;
 
             this.scope.daysDisplayed = days.length;
         }.bind(this));
@@ -106,45 +99,32 @@ export class MainController {
     }
 
     updateItemBulk () {
-        let data = this.bulk,
-            currentDate = new Date(this.currentDate);
+        let date,
+            data = this.bulk,
+            currentDate = this._moment(this.currentDate).utc();
+        // convert keys to array...
+        data.days = angular.isArray(this.bulk.days) ? Object.keys(this.bulk.days) : [];
 
-        this.log.info(data);
-        // ERROR
-        data.start_date = this._parseDate(data.start_date);
-        data.end_date = this._parseDate(data.end_date);
-
-        this.bulk = {}; // reset the model.
+        this.log.info(this.bulk);
 
         this.http.post('/api/calendars/bulk', data).then(function (response) {
             this.log.info(response);
-            this.getEvents(
-                currentDate.toUTCString(),
-                new Date(currentDate.getUTCFullYear(), currentDate.getUTCMonth(), 15).toUTCString()
-            );
+            date = this._getMonthToFrom(currentDate);
+            this.log.info(date);
+            this.getEvents(date.start, date.end);
+            this.bulk = {}; // reset the model.
         }.bind(this));
     }
 
-    _parseDate (date) {
-        let obj;
-        if (angular.isObject(date)) {
-            obj = this._moment(date.date);
-        } else {
-            obj = this._moment(date);
-        }
-
-        return obj.format('YYYY-MM-DD');
-    }
-
     getDateIntervalList (currentDate) {
-        let date = new Date(currentDate),
-            endDate = new Date(date),
+        let date = currentDate,
+            endDate = this._moment(currentDate).utc().add(6, 'months'),
             months = [];
-        endDate.setUTCMonth(endDate.getUTCMonth() + 6);
 
-        while (date < endDate) {
-            date.setUTCMonth(date.getUTCMonth() + 1);
-            months.push(new Date(date.getUTCFullYear(), date.getUTCMonth(), 1));
+        while (date <= endDate) {
+            date.add(1, 'months');
+            months.push(date);
+            date = date.clone();
         }
         this.scope.months = months;
     }
@@ -157,38 +137,40 @@ export class MainController {
         return !isNaN(parseInt(value)) && isFinite(value) ? true : value + " is not valid";
     }
 
-    _getDaysInMonth (y, m) {
-        return(m===2?y&3||!(y%25)&&y&15?28:29:30+(5546>>m&1));
+    _parseDate (date) {
+        let obj = date;
+        if (!date._isAMomentObject && angular.isDefined(date.date)) {
+            obj = this._moment(date.date);
+        } else if (!date._isAMomentObject) {
+            obj = this._moment(date);
+        }
+
+        return obj.format('YYYY-MM-DD');
+    }
+
+    _getDaysInMonth (date) {
+        return date.add('months', 1).date(1).subtract('days', 1).format('DD');
     }
 
     _getMonthToFrom (currentDate) {
-
-        let dateObj = new Date(currentDate);
-        let days = this._getDaysInMonth(dateObj.getUTCFullYear(), dateObj.getUTCMonth()),
+        let dateObj = currentDate;
+        let days = this._getDaysInMonth(this._moment(dateObj).utc()),
             halfMonth = Math.ceil(days / 2),
             object = {};
 
-        if (halfMonth > dateObj.getUTCDate()) {
+        if (halfMonth > dateObj.get('date')) {
             // get from 1 ...
             object = {
-                start: new Date(currentDate.getUTCFullYear(), currentDate.getUTCMonth(), 1),
-                end: new Date(currentDate.getFullYear(), currentDate.getMonth(), halfMonth)
+                start: this._moment(dateObj).utc().startOf('month'),
+                end: this._moment(dateObj).utc().date(halfMonth)
             };
         } else {
             object = {
-                start: new Date(currentDate.getUTCFullYear(), currentDate.getUTCMonth(), halfMonth + 1),
-                end: new Date(currentDate.getUTCFullYear(), currentDate.getUTCMonth(), days)
+                start: this._moment(dateObj).utc().date(halfMonth+1),
+                end: this._moment(dateObj).utc().date(days)
             }
         }
         return object;
-    }
-
-    _dateDiff (startDate, endDate) {
-        this.log.info('startdate', startDate, 'enddate', endDate);
-        let start = Math.floor( startDate.getTime() / (3600*24*1000)); //days as integer from..
-        let end   = Math.floor( endDate.getTime() / (3600*24*1000)); //days as integer from..
-        this.log.info("start", start, "end", end, "diff", (end - start));
-        return (end - start) + 1; // exact dates
     }
 
     openBeginDatePicker () {
@@ -205,5 +187,5 @@ export class MainController {
         if (this.bulk.start_date !== null) {
             this.scope.datePickerOptions.minDate = new Date(this.bulk.start_date);
         }
-    };
+    }
 }
