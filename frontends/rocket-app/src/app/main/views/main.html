@@ -187,7 +187,7 @@
         <tr>
             <td class="active">Price</td>
             <td class="center" ng-repeat="event in main.inventory.single">
-                <div class="popover-wrapper">
+                <div class="inline popover-wrapper">
                     <a href="#" editable-text="event.price" e-required onbeforesave="main.validPrice($data)" onaftersave="main.updatePrice(event)">{{ event.price|number:0 }} IDR</a>
                 </div>
             </td>
@@ -206,7 +206,7 @@
         <tr>
             <td class="active">Price</td>
             <td class="center" ng-repeat="event in main.inventory.double">
-                <div class="popover-wrapper">
+                <div class="inline popover-wrapper">
                     <a href="#" editable-text="event.price" e-required onbeforesave="main.validPrice($data)" onaftersave="main.updatePrice(event)">{{ event.price|number:0 }} IDR</a>
                 </div>
             </td>

@@ -47,6 +47,10 @@ a.disabled-link:hover {
   color:#aaa !important;
 }
 
+td div.inline {
+  white-space: nowrap;
+}
+
 /**
  *  Do not remove the comments below. It's the markers used by gulp-inject to inject
  *  all your sass files automatically
